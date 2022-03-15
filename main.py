@@ -15,7 +15,7 @@ client = commands.Bot(command_prefix="!")
 filename = "audio.mp3"
 
 if not discord.opus.is_loaded():
-     discord.opus.load_opus('libopus.so')
+    discord.opus.load_opus('libopus.so')
 
 def is_url(url):
     regex = re.compile(
@@ -34,6 +34,7 @@ def play_music(voice):
 
 @client.command()
 async def play(ctx, *, url : str):
+    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="!help"))
     current_song = os.path.isfile(filename)
     try:
         if current_song:
@@ -86,20 +87,26 @@ async def play(ctx, *, url : str):
 @client.command()
 async def pause(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
-    if voice.is_playing():
-        await ctx.send("The audio is paused.")
-        voice.pause()
-    else:
+    if voice == None:
         await ctx.send("No audio is playing currently!")
+    else:
+        if voice.is_playing():
+            await ctx.send("The audio is paused.")
+            voice.pause()
+        else:
+            await ctx.send("No audio is playing currently!")
 
 @client.command()
 async def resume(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
-    if voice.is_paused():
-        await ctx.send("The audio is resumed.")
-        voice.resume()
-    else:
+    if voice == None:
         await ctx.send("No audio is playing currently!")
+    else:
+        if voice.is_paused():
+            await ctx.send("The audio is resumed.")
+            voice.resume()
+        else:
+            await ctx.send("No audio is playing currently!")
 
 @client.command()
 async def stop(ctx):
