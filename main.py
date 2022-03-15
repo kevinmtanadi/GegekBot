@@ -15,7 +15,7 @@ client = commands.Bot(command_prefix="!")
 filename = "audio.mp3"
 
 if not discord.opus.is_loaded():
-    discord.opus.load_opus('libopus.so')
+     discord.opus.load_opus('libopus.so')
 
 def is_url(url):
     regex = re.compile(
@@ -56,9 +56,7 @@ async def play(ctx, *, url : str):
             yt = YouTube(url)
             audio = yt.streams.filter(only_audio=True).first()
             out_file = audio.download(output_path=".")
-            base, ext = os.path.splitext(out_file)
-            await ctx.send("Playing " + yt.title)
-            video_length = yt.length
+            await ctx.send("Current playing " + yt.title)
         else:
             result = YoutubeSearch(url, max_results=1).to_dict()
             for v in result:
@@ -66,22 +64,30 @@ async def play(ctx, *, url : str):
                 yt = YouTube(youtube_url)
                 audio = yt.streams.filter(only_audio=True).first()
                 out_file = audio.download(output_path=".")
-                base, ext = os.path.splitext(out_file)
                 os.rename(out_file, filename)
                 await ctx.send("Currently playing " + yt.title)
-                video_length = yt.length
 
             play_music(voice)
-            while voice.is_playing():
+
+        while voice.is_connected():
+            if voice.is_paused():
                 await sleep(1)
-            await voice.disconnect()
-            os.remove(filename)
+                print("1")
+            elif voice.is_playing():
+                await sleep(1)
+                print("2")
+            else:
+                await ctx.voice_client.disconnect()
+                print("3")
+                break
+        os.remove(filename)
 
 
 @client.command()
 async def pause(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     if voice.is_playing():
+        await ctx.send("The audio is paused.")
         voice.pause()
     else:
         await ctx.send("No audio is playing currently!")
@@ -90,6 +96,7 @@ async def pause(ctx):
 async def resume(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     if voice.is_paused():
+        await ctx.send("The audio is resumed.")
         voice.resume()
     else:
         await ctx.send("No audio is playing currently!")
@@ -97,12 +104,16 @@ async def resume(ctx):
 @client.command()
 async def stop(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
-    voice.stop()
-    if voice.is_connected():
-        await voice.disconnect()
-    else:
-        await voice.disconnect()
+    if voice is None:
         await ctx.send("The bot is not connected to a voice channel.")
+    else:
+        voice.stop()
+        if voice.is_connected():
+            await ctx.send("The audio is stopped.")
+            await voice.disconnect()
+        else:
+            await voice.disconnect()
+            await ctx.send("The bot is not connected to a voice channel.")
 
 def exit_handler():
     os.remove(filename)
