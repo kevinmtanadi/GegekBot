@@ -7,12 +7,12 @@ import atexit
 import re
 from youtube_search import YoutubeSearch
 from asyncio import sleep
+
 load_dotenv('envi.env')
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 client = commands.Bot(command_prefix="!")
 filename = "audio.mp3"
-video_length = 0
 
 def is_url(url):
     regex = re.compile(
@@ -30,7 +30,7 @@ def play_music(voice):
     voice.play(discord.FFmpegPCMAudio(source=filename))
 
 @client.command()
-async def play(ctx, url : str):
+async def play(ctx, *, url : str):
     current_song = os.path.isfile(filename)
     try:
         if current_song:
@@ -98,6 +98,7 @@ async def stop(ctx):
     if voice.is_connected():
         await voice.disconnect()
     else:
+        await voice.disconnect()
         await ctx.send("The bot is not connected to a voice channel.")
 
 def exit_handler():
