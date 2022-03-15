@@ -14,6 +14,9 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 client = commands.Bot(command_prefix="!")
 filename = "audio.mp3"
 
+if not discord.opus.is_loaded():
+    discord.opus.load_opus('libopus.so')
+
 def is_url(url):
     regex = re.compile(
         r'^https?://'  # http:// or https://
