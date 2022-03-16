@@ -15,7 +15,7 @@ client = commands.Bot(command_prefix="!")
 filename = "audio.mp3"
 
 if not discord.opus.is_loaded():
-    discord.opus.load_opus('libopus.so')
+     discord.opus.load_opus('libopus.so')
 
 def is_url(url):
     regex = re.compile(
@@ -86,41 +86,53 @@ async def play(ctx, *, url : str):
 
 @client.command()
 async def pause(ctx):
-    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
-    if voice == None:
-        await ctx.send("No audio is playing currently!")
+    author = ctx.message.author.voice
+    if not author:
+        await ctx.send("You have to be in a voice channel!")
     else:
-        if voice.is_playing():
-            await ctx.send("The audio is paused.")
-            voice.pause()
-        else:
+        voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+        if voice == None:
             await ctx.send("No audio is playing currently!")
+        else:
+            if voice.is_playing():
+                await ctx.send("The audio is paused.")
+                voice.pause()
+            else:
+                await ctx.send("No audio is playing currently!")
 
 @client.command()
 async def resume(ctx):
-    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
-    if voice == None:
-        await ctx.send("No audio is playing currently!")
+    author = ctx.message.author.voice
+    if not author:
+        await ctx.send("You have to be in a voice channel!")
     else:
-        if voice.is_paused():
-            await ctx.send("The audio is resumed.")
-            voice.resume()
-        else:
+        voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+        if voice == None:
             await ctx.send("No audio is playing currently!")
+        else:
+            if voice.is_paused():
+                await ctx.send("The audio is resumed.")
+                voice.resume()
+            else:
+                await ctx.send("No audio is playing currently!")
 
 @client.command()
 async def stop(ctx):
-    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
-    if voice is None:
-        await ctx.send("The bot is not connected to a voice channel.")
+    author = ctx.message.author.voice
+    if not author:
+        await ctx.send("You have to be in a voice channel!")
     else:
-        voice.stop()
-        if voice.is_connected():
-            await ctx.send("The audio is stopped.")
-            await voice.disconnect()
-        else:
-            await voice.disconnect()
+        voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+        if voice is None:
             await ctx.send("The bot is not connected to a voice channel.")
+        else:
+            voice.stop()
+            if voice.is_connected():
+                await ctx.send("The audio is stopped.")
+                await voice.disconnect()
+            else:
+                await voice.disconnect()
+                await ctx.send("The bot is not connected to a voice channel.")
 
 def exit_handler():
     os.remove(filename)
