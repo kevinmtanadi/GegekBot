@@ -57,6 +57,7 @@ async def play(ctx, *, url : str):
             yt = YouTube(url)
             audio = yt.streams.filter(only_audio=True).first()
             out_file = audio.download(output_path=".")
+            os.rename(out_file, filename)
             await ctx.send("Current playing " + yt.title)
         else:
             result = YoutubeSearch(url, max_results=1).to_dict()
@@ -68,7 +69,7 @@ async def play(ctx, *, url : str):
                 os.rename(out_file, filename)
                 await ctx.send("Currently playing " + yt.title)
 
-            play_music(voice)
+        play_music(voice)
 
         while voice.is_connected():
             if voice.is_paused():
