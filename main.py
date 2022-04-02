@@ -63,7 +63,7 @@ async def add(ctx, *, url : str):
 
 @client.command()
 async def queue(ctx):
-    if len(songQueue) > 1:
+    if len(songQueue) > 0:
         i = 1
         songList = "Current song queue :\n"
         for songs in songQueue:
