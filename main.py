@@ -1,21 +1,25 @@
 import os
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
 from pytube import YouTube
-import atexit
 import re
 from youtube_search import YoutubeSearch
 from asyncio import sleep
 
-load_dotenv('envi.env')
-TOKEN = os.getenv('DISCORD_TOKEN')
-
+TOKEN = "OTUwMzI2NjU2NTI1MDEzMDgy.YiXSqw.52J64vjEBPXzIn_mZi_3JBLinNw"
 client = commands.Bot(command_prefix="!")
-filename = "audio.mp3"
 
 if not discord.opus.is_loaded():
      discord.opus.load_opus('libopus.so')
+
+class Song:
+    def __init__(self, title, url, id):
+        self.id = id
+        self.title = title
+        self.url = url
+
+songQueue = []
+filename = "audio.mp3"
 
 def is_url(url):
     regex = re.compile(
@@ -29,97 +33,86 @@ def is_url(url):
         return True
     return False
 
+def is_connected(ctx):
+    voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
+    return voice_client and voice_client.is_connected()
+
 def play_music(voice):
     voice.play(discord.FFmpegPCMAudio(source=filename))
 
 @client.command()
-async def play(ctx, *, url : str):
-    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="!help"))
-    current_song = os.path.isfile(filename)
-    try:
-        if current_song:
-            os.remove(filename)
-    except PermissionError:
-        await ctx.send("Wait for the current music to end or use the '!stop' command")
-
+async def add(ctx, *, url : str):
+    id = 0
     author = ctx.message.author.voice
     if not author:
         await ctx.send("You have to be in a voice channel to play a song!")
-    channel = author.channel
-    await channel.connect()
-    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
-
-    if voice is None or not voice.is_connected():
-        await channel.connect()
-
-    if author:
-        if is_url(url):
+    else:
+        if (is_url(url)):
             yt = YouTube(url)
-            audio = yt.streams.filter(only_audio=True).first()
-            out_file = audio.download(output_path=".")
-            os.rename(out_file, filename)
-            await ctx.send("Current playing " + yt.title)
+            songQueue.append(Song(yt.title, url, id))
         else:
             result = YoutubeSearch(url, max_results=1).to_dict()
             for v in result:
                 youtube_url = "https://www.youtube.com" + v['url_suffix']
                 yt = YouTube(youtube_url)
-                audio = yt.streams.filter(only_audio=True).first()
-                out_file = audio.download(output_path=".")
-                os.rename(out_file, filename)
-                await ctx.send("Currently playing " + yt.title)
+                songQueue.append(Song(yt.title, youtube_url, id))
+        id += 1
+        await ctx.send("Song added to the queue!")
 
-        play_music(voice)
 
-        while voice.is_connected():
-            if voice.is_paused():
-                await sleep(1)
-                print("1")
-            elif voice.is_playing():
-                await sleep(1)
-                print("2")
-            else:
-                await ctx.voice_client.disconnect()
-                print("3")
-                break
+
+@client.command()
+async def queue(ctx):
+    if len(songQueue) > 1:
+        i = 1
+        songList = "Current song queue :\n"
+        for songs in songQueue:
+            songList += str(i) + ". " + songs.title + "\n"
+            i += 1
+        await ctx.send(songList)
+    else:
+        await ctx.send("There is currently no song in the queue! Use !add [music title or youtube link] to add a song to the queue")
+
+@client.command()
+async def play(ctx):
+    if os.path.isfile(filename):
         os.remove(filename)
-
-
-@client.command()
-async def pause(ctx):
-    author = ctx.message.author.voice
-    if not author:
-        await ctx.send("You have to be in a voice channel!")
+    if len(songQueue) == 0:
+        await ctx.send("There is no song on the queue. Use !add [music title or youtube link] to add a song to the queue")
     else:
+        author = ctx.message.author.voice
+        if not author:
+            await ctx.send("You have to be in a voice channel to play a song!")
+        channel = author.channel
+        await channel.connect()
         voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
-        if voice == None:
-            await ctx.send("No audio is playing currently!")
-        else:
-            if voice.is_playing():
-                await ctx.send("The audio is paused.")
-                voice.pause()
-            else:
-                await ctx.send("No audio is playing currently!")
 
-@client.command()
-async def resume(ctx):
-    author = ctx.message.author.voice
-    if not author:
-        await ctx.send("You have to be in a voice channel!")
-    else:
-        voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
-        if voice == None:
-            await ctx.send("No audio is playing currently!")
-        else:
-            if voice.is_paused():
-                await ctx.send("The audio is resumed.")
-                voice.resume()
-            else:
-                await ctx.send("No audio is playing currently!")
+        if voice is None or not voice.is_connected():
+            await channel.connect()
+
+        while len(songQueue) > 0:
+            currentSong = songQueue[0]
+            songQueue.remove(currentSong)
+
+            for obj in songQueue:
+                print(obj.title)
+
+            yt = YouTube(currentSong.url)
+            audio = yt.streams.filter(only_audio=True).first()
+            out_file = audio.download(output_path=".")
+            os.rename(out_file, filename)
+            await ctx.send("Current playing " + yt.title)
+            play_music(voice)
+
+            await sleep(yt.length + 2)
+            os.remove(filename)
+
+        await voice.disconnect()
 
 @client.command()
 async def stop(ctx):
     author = ctx.message.author.voice
+    songQueue.clear()
     if not author:
         await ctx.send("You have to be in a voice channel!")
     else:
@@ -135,9 +128,17 @@ async def stop(ctx):
                 await voice.disconnect()
                 await ctx.send("The bot is not connected to a voice channel.")
 
-def exit_handler():
-    os.remove(filename)
+@client.command()
+async def clear(ctx):
+    if len(songQueue) > 1:
+        songQueue.clear()
+        await ctx.send("The song queue is emptied")
+    else:
+        await ctx.send("There is currently no song in the queue!")
 
-atexit.register(exit_handler)
+
+@client.command()
+async def skip(ctx):
+    await ctx.send("Feature not yet added")
 
 client.run(TOKEN)
