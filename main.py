@@ -21,7 +21,7 @@ class Song:
 
 songQueue = []
 filename = "audio.mp3"
-currentSong = null
+currentSong = None
 
 def is_url(url):
     regex = re.compile(
