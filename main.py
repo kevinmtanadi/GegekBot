@@ -21,7 +21,6 @@ class Song:
 
 songQueue = []
 filename = "audio.mp3"
-currentSong = None
 
 def is_url(url):
     regex = re.compile(
@@ -148,6 +147,7 @@ async def skip(ctx):
     if not author:
         await ctx.send("You have to be in a voice channel!")
     else:
+        currentSong = songQueue[0]
         currentSong.length = 0
 
 client.run(TOKEN)
