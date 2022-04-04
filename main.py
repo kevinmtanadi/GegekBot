@@ -108,6 +108,7 @@ async def play(ctx):
                 await sleep(1)
                 currentSong.length -= 1
 
+
             songQueue.remove(currentSong)
             os.remove(filename)
 
@@ -149,5 +150,6 @@ async def skip(ctx):
     else:
         currentSong = songQueue[0]
         currentSong.length = 0
+        ctx.voice_client.stop()
 
 client.run(TOKEN)
