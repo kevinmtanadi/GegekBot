@@ -10,16 +10,18 @@ TOKEN = "OTUwMzI2NjU2NTI1MDEzMDgy.YiXSqw.52J64vjEBPXzIn_mZi_3JBLinNw"
 client = commands.Bot(command_prefix="!")
 
 if not discord.opus.is_loaded():
-     discord.opus.load_opus('libopus.so')
+    discord.opus.load_opus('libopus.so')
 
 class Song:
-    def __init__(self, title, url, id):
+    def __init__(self, title, url, id, length):
         self.id = id
         self.title = title
         self.url = url
+        self.length = length
 
 songQueue = []
 filename = "audio.mp3"
+currentSong = null
 
 def is_url(url):
     regex = re.compile(
@@ -49,13 +51,13 @@ async def add(ctx, *, url : str):
     else:
         if (is_url(url)):
             yt = YouTube(url)
-            songQueue.append(Song(yt.title, url, id))
+            songQueue.append(Song(yt.title, url, id, yt.length))
         else:
             result = YoutubeSearch(url, max_results=1).to_dict()
             for v in result:
                 youtube_url = "https://www.youtube.com" + v['url_suffix']
                 yt = YouTube(youtube_url)
-                songQueue.append(Song(yt.title, youtube_url, id))
+                songQueue.append(Song(yt.title, youtube_url, id, yt.length))
         id += 1
         await ctx.send("Song added to the queue!")
 
@@ -92,7 +94,6 @@ async def play(ctx):
 
         while len(songQueue) > 0:
             currentSong = songQueue[0]
-            songQueue.remove(currentSong)
 
             for obj in songQueue:
                 print(obj.title)
@@ -104,7 +105,11 @@ async def play(ctx):
             await ctx.send("Current playing " + yt.title)
             play_music(voice)
 
-            await sleep(yt.length + 2)
+            while currentSong.length > 0:
+                await sleep(1)
+                currentSong.length -= 1
+
+            songQueue.remove(currentSong)
             os.remove(filename)
 
         await voice.disconnect()
@@ -139,6 +144,10 @@ async def clear(ctx):
 
 @client.command()
 async def skip(ctx):
-    await ctx.send("Feature not yet added")
+    author = ctx.message.author.voice
+    if not author:
+        await ctx.send("You have to be in a voice channel!")
+    else:
+        currentSong.length = 0
 
 client.run(TOKEN)
