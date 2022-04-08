@@ -7,7 +7,10 @@ from youtube_search import YoutubeSearch
 from asyncio import sleep
 
 TOKEN = "OTUwMzI2NjU2NTI1MDEzMDgy.YiXSqw.52J64vjEBPXzIn_mZi_3JBLinNw"
-client = commands.Bot(command_prefix="!")
+
+
+intents = discord.Intents.default()
+client = commands.Bot(command_prefix="!", intents=intents)
 
 if not discord.opus.is_loaded():
     discord.opus.load_opus('libopus.so')
@@ -40,6 +43,18 @@ def is_connected(ctx):
 
 def play_music(voice):
     voice.play(discord.FFmpegPCMAudio(source=filename))
+
+intents.voice_states = True
+
+@client.event
+async def on_voice_state_update(member, before, after):
+    voice_state = member.guild.voice_client
+    if voice_state is None:
+        # Exiting if the bot it's not connected to a voice channel
+        return
+
+    if len(voice_state.channel.members) == 1:
+        await voice_state.disconnect()
 
 @client.command()
 async def add(ctx, *, url : str):
