@@ -137,7 +137,7 @@ async def stop(ctx):
         await ctx.send("You have to be in a voice channel!")
     else:
         voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
-        if not voice_.is_connected():
+        if not voice.is_connected():
             await ctx.send("The bot is not connected to a voice channel.")
         else:
             voice.stop()
