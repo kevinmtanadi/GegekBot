@@ -12,8 +12,8 @@ TOKEN = "OTUwMzI2NjU2NTI1MDEzMDgy.YiXSqw.52J64vjEBPXzIn_mZi_3JBLinNw"
 intents = discord.Intents.default()
 client = commands.Bot(command_prefix="!", intents=intents)
 
-if not discord.opus.is_loaded():
-    discord.opus.load_opus('libopus.so')
+#if not discord.opus.is_loaded():
+    #discord.opus.load_opus('libopus.so')
 
 class Song:
     def __init__(self, title, url, id, length):
@@ -100,7 +100,10 @@ async def play(ctx):
         if not author:
             await ctx.send("You have to be in a voice channel to play a song!")
         channel = author.channel
-        await channel.connect()
+        try:
+            await channel.connect()
+        except:
+            print("Bot already connected")
         voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
 
         if voice is None or not voice.is_connected():
