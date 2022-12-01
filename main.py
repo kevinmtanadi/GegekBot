@@ -23,10 +23,16 @@ class Song:
         self.url = url
         self.length = length
 
+class Looper:
+    def __init__(self):
+        self.isLooping = False
+
+    def changeLoopStatus(self):
+        self.isLooping = not self.isLooping
+
 songQueue = []
 filename = "audio.mp3"
-
-isLooping = False
+looper = Looper()
 
 def is_url(url):
     regex = re.compile(
@@ -66,7 +72,7 @@ async def add(ctx, *, url : str):
     if not author:
         await ctx.send("You have to be in a voice channel to play a song!")
     else:
-        if isLooping:
+        if looper.isLooping:
             await ctx.send("Stop the loop using /loop before adding any new song")
         else:
             if (is_url(url)):
@@ -83,12 +89,13 @@ async def add(ctx, *, url : str):
 
 @client.command()
 async def loop(ctx):
-    if len(songQueue > 0):
-        isLooping = not isLooping
-        if isLooping:
+    if len(songQueue) > 0:
+        looper.changeLoopStatus()
+        if looper.isLooping:
             await ctx.send("Currently looping")
         else:
             await ctx.send("Stopped looping")
+
     else:
         await ctx.send("There is currently no song in the queue! Use !add [music title or youtube link] to add a song to the queue")
 
@@ -142,7 +149,7 @@ async def play(ctx):
                 await sleep(1)
                 currentSong.length -= 1
 
-            if isLooping:
+            if loop.isLooping:
                 songQueue.append(currentSong)
 
             songQueue.remove(currentSong)
