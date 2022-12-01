@@ -26,6 +26,8 @@ class Song:
 songQueue = []
 filename = "audio.mp3"
 
+isLooping = False
+
 def is_url(url):
     regex = re.compile(
         r'^https?://'  # http:// or https://
@@ -64,18 +66,24 @@ async def add(ctx, *, url : str):
     if not author:
         await ctx.send("You have to be in a voice channel to play a song!")
     else:
-        if (is_url(url)):
-            yt = YouTube(url)
-            songQueue.append(Song(yt.title, url, id, yt.length))
+        if isLooping:
+            await ctx.send("Stop the loop using /loop before adding any new song")
         else:
-            result = YoutubeSearch(url, max_results=1).to_dict()
-            for v in result:
-                youtube_url = "https://www.youtube.com" + v['url_suffix']
-                yt = YouTube(youtube_url)
-                songQueue.append(Song(yt.title, youtube_url, id, yt.length))
-        id += 1
-        await ctx.send("Song added to the queue!")
+            if (is_url(url)):
+                yt = YouTube(url)
+                songQueue.append(Song(yt.title, url, id, yt.length))
+            else:
+                result = YoutubeSearch(url, max_results=1).to_dict()
+                for v in result:
+                    youtube_url = "https://www.youtube.com" + v['url_suffix']
+                    yt = YouTube(youtube_url)
+                    songQueue.append(Song(yt.title, youtube_url, id, yt.length))
+            id += 1
+            await ctx.send("Song added to the queue!")
 
+@client.command()
+async def loop(ctx):
+    isLooping = not isLooping
 
 
 @client.command()
@@ -127,6 +135,8 @@ async def play(ctx):
                 await sleep(1)
                 currentSong.length -= 1
 
+            if isLooping:
+                songQueue.append(currentSong)
 
             songQueue.remove(currentSong)
             os.remove(filename)
