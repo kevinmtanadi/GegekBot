@@ -149,7 +149,7 @@ async def play(ctx):
                 await sleep(1)
                 currentSong.length -= 1
 
-            if loop.isLooping:
+            if looper.isLooping:
                 songQueue.append(currentSong)
 
             songQueue.pop(0)
