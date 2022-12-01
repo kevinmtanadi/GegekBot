@@ -84,6 +84,10 @@ async def add(ctx, *, url : str):
 @client.command()
 async def loop(ctx):
     isLooping = not isLooping
+    if isLooping:
+        await ctx.send("Currently looping")
+    else:
+        await ctx.send("Stopped looping")
 
 
 @client.command()
