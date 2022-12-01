@@ -83,11 +83,14 @@ async def add(ctx, *, url : str):
 
 @client.command()
 async def loop(ctx):
-    isLooping = not isLooping
-    if isLooping:
-        await ctx.send("Currently looping")
+    if len(songQueue > 0):
+        isLooping = not isLooping
+        if isLooping:
+            await ctx.send("Currently looping")
+        else:
+            await ctx.send("Stopped looping")
     else:
-        await ctx.send("Stopped looping")
+        await ctx.send("There is currently no song in the queue! Use !add [music title or youtube link] to add a song to the queue")
 
 
 @client.command()
