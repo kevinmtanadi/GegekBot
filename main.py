@@ -5,15 +5,16 @@ from pytube import YouTube
 import re
 from youtube_search import YoutubeSearch
 from asyncio import sleep
+from dotenv import load_dotenv
 
-TOKEN = "OTUwMzI2NjU2NTI1MDEzMDgy.YiXSqw.52J64vjEBPXzIn_mZi_3JBLinNw"
+load_dotenv()
 
 
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 client = commands.Bot(command_prefix="!", intents=intents)
 
-#if not discord.opus.is_loaded():
-    #discord.opus.load_opus('libopus.so')
+if not discord.opus.is_loaded():
+    discord.opus.load_opus('libopus.so')
 
 class Song:
     def __init__(self, title, url, id, length):
@@ -182,4 +183,4 @@ async def remove(ctx, arg : int):
     else:
         await ctx.send("There is currently no song in the queue!")
 
-client.run(TOKEN)
+client.run(os.getenv('TOKEN'))
