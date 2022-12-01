@@ -152,7 +152,7 @@ async def play(ctx):
             if loop.isLooping:
                 songQueue.append(currentSong)
 
-            songQueue = songQueue.pop(currentSong)
+            songQueue.pop(0)
             os.remove(filename)
 
         await voice.disconnect()
