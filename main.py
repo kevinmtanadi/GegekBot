@@ -11,7 +11,7 @@ load_dotenv()
 
 
 intents = discord.Intents.all()
-client = commands.Bot(command_prefix="/", intents=intents)
+client = commands.Bot(command_prefix="!", intents=intents)
 
 if not discord.opus.is_loaded():
     discord.opus.load_opus('libopus.so')
