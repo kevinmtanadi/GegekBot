@@ -11,7 +11,7 @@ load_dotenv()
 
 
 intents = discord.Intents.all()
-client = commands.Bot(command_prefix="!", intents=intents)
+client = commands.Bot(command_prefix="/", intents=intents)
 
 if not discord.opus.is_loaded():
     discord.opus.load_opus('libopus.so')
@@ -152,7 +152,7 @@ async def play(ctx):
             if loop.isLooping:
                 songQueue.append(currentSong)
 
-            songQueue.remove(currentSong)
+            songQueue = songQueue.pop(currentSong)
             os.remove(filename)
 
         await voice.disconnect()
@@ -161,6 +161,7 @@ async def play(ctx):
 async def stop(ctx):
     author = ctx.message.author.voice
     songQueue.clear()
+    looper.isLooping = False
     if not author:
         await ctx.send("You have to be in a voice channel!")
     else:
