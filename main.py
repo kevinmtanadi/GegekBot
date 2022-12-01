@@ -6,6 +6,7 @@ import re
 from youtube_search import YoutubeSearch
 from asyncio import sleep
 from dotenv import load_dotenv
+import copy
 
 load_dotenv()
 
@@ -134,6 +135,7 @@ async def play(ctx):
 
         while len(songQueue) > 0:
             currentSong = songQueue[0]
+            songLength = copy.deepcopy(currentSong.length)
 
             for obj in songQueue:
                 print(obj.title)
@@ -148,6 +150,8 @@ async def play(ctx):
             while currentSong.length > 0:
                 await sleep(1)
                 currentSong.length -= 1
+
+            currentSong.length = songLength
 
             if looper.isLooping:
                 songQueue.append(currentSong)
